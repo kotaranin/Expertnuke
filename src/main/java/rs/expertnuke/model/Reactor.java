@@ -217,4 +217,30 @@ public class Reactor {
 		this.increasedIodineActivity = increasedIodineActivity;
 	}
 
+	public double getUpperPressureLimit() {
+		switch (reactorType) {
+		case RBMK:
+			return 80;
+		case VVER_PWR:
+			return 165;
+		case BWR:
+			return 85;
+		default:
+			return 0;
+		}
+	}
+
+	public double getNominalTemperature() {
+		switch (reactorType) {
+		case RBMK:
+			return 284;
+		case VVER_PWR:
+			return 320;
+		case BWR:
+			return 286;
+		default:
+			return 0;
+		}
+	}
+
 }
