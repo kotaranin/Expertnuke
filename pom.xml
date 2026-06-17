@@ -60,6 +60,11 @@
 			<artifactId>kie-api</artifactId>
 			<version>${drools.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-mvel</artifactId>
+			<version>8.44.0.Final</version>
+		</dependency>
 	</dependencies>
 
 	<build>
