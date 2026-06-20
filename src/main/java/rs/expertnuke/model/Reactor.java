@@ -1,5 +1,8 @@
 package rs.expertnuke.model;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import rs.expertnuke.model.enums.ExternalPower;
 import rs.expertnuke.model.enums.IncreasedIodineActivity;
 import rs.expertnuke.model.enums.PORVStatus;
@@ -9,26 +12,42 @@ import rs.expertnuke.model.enums.RodStatus;
 import rs.expertnuke.model.enums.WaterLevel;
 
 public class Reactor {
+	
+	@NotNull
 	private ReactorType reactorType;
+	@Min(0)
+	@Max(120)
 	private double power;
+	@Min(0)
 	private int minutesOnLowPower;
 	private boolean requestedPowerIncrease;
+	@Min(0)
+	@Max(100)
 	private double rodsPulled;
 	private RodStatus rodStatus;
+	@Min(0)
 	private double pressure;
 	private PORVStatus porvStatus;
+	@Min(0)
 	private double pressureDrop;
+	@Min(0)
 	private double temperature;
 	private PumpStatus pumpStatus;
+	@NotNull
 	private WaterLevel waterLevel;
 	private boolean testInProgress;
 	private boolean eccsOff;
 	private boolean scramOff;
 	private boolean fluxMonitoringOff;
 	private boolean pumpsOff;
+	@NotNull
 	private ExternalPower externalPower;
+	@Min(0)
 	private int secondsUntilDiesel;
+	@Min(0)
+	@Max(100)
 	private double hydrogenConcentration;
+	@Min(0)
 	private double radiation;
 	private boolean gasLeaks;
 	private IncreasedIodineActivity increasedIodineActivity;

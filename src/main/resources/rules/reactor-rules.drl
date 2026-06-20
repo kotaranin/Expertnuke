@@ -84,7 +84,7 @@ end
 
 rule "PR10 - Umereno povišen pritisak u primarnom kolu"
 when
-	r: Reactor (pressure > 1.05 * r.getUpperPressureLimit() , pressure < 1.1 * r.getUpperPressureLimit())
+	r: Reactor (pressure > 1.05 * r.getUpperPressureLimit(), pressure <= 1.1 * r.getUpperPressureLimit())
 then
 	String explanation = "Prekomeran pritisak može dovesti do pucanja cevi ili reaktorskog suda.";
 	insert(new Recommendation(RecommendationType.R7, explanation));
@@ -92,11 +92,11 @@ end
 
 rule "PR11 - Kritično povišen pritisak u primarnom kolu"
 when
-	r: Reactor (porvStatus == PORVStatus.NORMAL, pressure > 1.1 * r.getUpperPressureLimit())
+	r: Reactor (pressure > 1.1 * r.getUpperPressureLimit())
 then
 	String explanation = "Opasnost od rupture je neizbežna.";
 	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R7, explanation));
+	insert(new Recommendation(RecommendationType.R7, explanation)); 
 end
 
 rule "PR12 - Zaglavljen otvoreni ventil za smanjenje pritiska"
@@ -120,7 +120,7 @@ end
 
 rule "PR14 - Mali gubitak rashladnog sredstva"
 when
-	r: Reactor (pressureDrop > 0, pressureDrop < 1, waterLevel == WaterLevel.DECREASED)
+	r: Reactor (pressureDrop > 0, pressureDrop < 1)
 then
 	String explanation = "Spora mikroprokotina može preći u ozbiljno curenje ako se ne lokalizuje.";
 	insert(new Recommendation(RecommendationType.R6, explanation));
@@ -132,7 +132,6 @@ when
 then
 	String explanation = "Srednje ozbiljno curenje zahteva ozbiljniju reakciju da bi se sprečilo dalje pogoršanje stanja.";
 	insert(new Recommendation(RecommendationType.R4, explanation));
-	insert(new Recommendation(RecommendationType.R6, explanation));
 	insert(new Recommendation(RecommendationType.R11, explanation));
 end
 
@@ -142,8 +141,6 @@ when
 then
 	String explanation = "Katastrofalno curenje rashladnog sredstva je u toku i bez hitne intervencije dolazi do topljenja jezgra.";
 	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R4, explanation));
-	insert(new Recommendation(RecommendationType.R6, explanation));
 	insert(new Recommendation(RecommendationType.R14, explanation));
 	insert(new Recommendation(RecommendationType.R16, explanation));
 end
@@ -195,7 +192,7 @@ end
 
 rule "PR22 - Snižen nivo rashladne vode"
 when
-	r: Reactor (waterLevel == WaterLevel.DECREASED, pressureDrop == 0)
+	r: Reactor (waterLevel == WaterLevel.DECREASED)
 then
 	String explanation = "Snižen nivo vode ukazuje na moguće curenje.";
 	insert(new Recommendation(RecommendationType.R3, explanation));
@@ -204,12 +201,10 @@ end
 
 rule "PR23 - Kritično snižen nivo rashladne vode"
 when
-	r: Reactor (waterLevel == WaterLevel.CRITICALLY_DECREASED, pressureDrop < 5)
+	r: Reactor (waterLevel == WaterLevel.CRITICALLY_DECREASED)
 then
 	String explanation = "Jezgro delimično otkriveno i topljenje goriva je neminovno.";
 	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R4, explanation));
-	insert(new Recommendation(RecommendationType.R6, explanation));
 	insert(new Recommendation(RecommendationType.R14, explanation));
 end
 
@@ -277,7 +272,7 @@ end
 
 rule "PR31 - Blago povišena radijacija u kontrolnoj sali"
 when
-	r: Reactor (radiation >= 0.5, radiation < 5, gasLeaks == false, increasedIodineActivity == IncreasedIodineActivity.NO)
+	r: Reactor (radiation >= 0.5, radiation < 5)
 then
 	String explanation = "Povišena radijacija u kontrolnoj sali ukazuje na moguće curenje radioaktivnih gasova.";
 	insert(new Recommendation(RecommendationType.R14, explanation));
@@ -313,7 +308,7 @@ end
 
 rule "PR35 - Curenje radioaktivnih gasova u ventilacionim kanalima"
 when
-	r: Reactor (gasLeaks == true, radiation < 1000, increasedIodineActivity == IncreasedIodineActivity.NO)
+	r: Reactor (gasLeaks == true)
 then
 	String explanation = "Curenje radioaktivnih gasova ukazuje na mogući proboj zaštitnih barijera unutar reaktora.";
 	insert(new Recommendation(RecommendationType.R14, explanation));
