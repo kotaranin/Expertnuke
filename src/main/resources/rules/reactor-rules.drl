@@ -1,7 +1,5 @@
 package rs.expertnuke.rules;
 
-dialect "mvel"
-
 import rs.expertnuke.model.Reactor;
 import rs.expertnuke.model.Recommendation;
 import rs.expertnuke.model.enums.ExternalPower;
