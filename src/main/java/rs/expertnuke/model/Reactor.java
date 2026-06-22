@@ -1,5 +1,8 @@
 package rs.expertnuke.model;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +15,7 @@ import rs.expertnuke.model.enums.RodStatus;
 import rs.expertnuke.model.enums.WaterLevel;
 
 public class Reactor {
-	
+
 	@NotNull
 	private ReactorType reactorType;
 	@Min(0)
@@ -51,6 +54,7 @@ public class Reactor {
 	private double radiation;
 	private boolean gasLeaks;
 	private IncreasedIodineActivity increasedIodineActivity;
+	private List<Recommendation> recommendations = new LinkedList<>();
 
 	public ReactorType getReactorType() {
 		return reactorType;
@@ -234,6 +238,10 @@ public class Reactor {
 
 	public void setIncreasedIodineActivity(IncreasedIodineActivity increasedIodineActivity) {
 		this.increasedIodineActivity = increasedIodineActivity;
+	}
+
+	public List<Recommendation> getRecommendations() {
+		return recommendations;
 	}
 
 	public double getUpperPressureLimit() {

@@ -15,7 +15,8 @@ rule "PR2 - Prekoračenje nominalne snage"
 when
     r: Reactor (power > 100)
 then
-    insert(new Recommendation(RecommendationType.R1, "Rad iznad nominalne snage povećava opterećenje gorivnih elemenata i rashladnog kola."));
+    r.getRecommendations().add(new Recommendation(RecommendationType.R1, "Rad iznad nominalne snage povećava opterećenje gorivnih elemenata i rashladnog kola."));
+    update(r);
 end
 
 rule "PR3 - Početak trovanja ksenonom"
@@ -23,8 +24,9 @@ when
     r: Reactor (power < 20, minutesOnLowPower >= 60, minutesOnLowPower < 240)
 then
 	String explanation = "Ksenon apsorbuje neutrone, usporava lančanu reakciju i otežava dalje podizanje snage";
-    insert(new Recommendation(RecommendationType.R12, explanation));
-    insert(new Recommendation(RecommendationType.R19, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R12, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R19, explanation));
+    update(r);
 end
 
 rule "PR4 - Duboka ksenon-jama"
@@ -32,18 +34,20 @@ when
 	r: Reactor (power < 20, minutesOnLowPower >= 240, requestedPowerIncrease == false)
 then
 	String explanation = "Ksenon je dostigao toliku koncentraciju da je reaktor je u dubokom trovanju iz kojeg se ne može izaći bez kritičnog smanjenja broja kontrolnih šipki.";
-	insert(new Recommendation(RecommendationType.R10, explanation));
-	insert(new Recommendation(RecommendationType.R19, explanation));
-	insert(new Recommendation(RecommendationType.R20, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R10, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R19, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R20, explanation));
+	update(r);
 end
 
 rule "PR5 - Zabrana podizanja snage iz ksenon-jame"
 when
-	r: Reactor (power < 20, minutesOnLowPower >= 240, requestedPowerIncrease == true)
+	r: Reactor (recommendations.contains(new Recommendation(RecommendationType.R10)), power < 20, minutesOnLowPower >= 240, requestedPowerIncrease == true)
 then
 	String explanation = "Pokušaj podizanja snage iz duboke ksenonjame zahteva izvlačenje gotovo svih kontrolnih šipki čime se gubi svaka mogućnost brzog zaustavljanja reakcije.";
-	insert(new Recommendation(RecommendationType.R10, explanation));
-	insert(new Recommendation(RecommendationType.R20, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R10, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R20, explanation));
+	update(r);
 end
 
 rule "PR6 - Neravnomerna distribucija snage"
@@ -51,7 +55,8 @@ when
 	r: Reactor (rodsPulled >= 50, rodsPulled <= 70)
 then
 	String explanation = "Neravnomerno izvučene šipke ukazuju na lokalna žarišta prekomerne fisije u pojedinim zonama jezgra.";
-	insert(new Recommendation(RecommendationType.R24, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R24, explanation));
+	update(r);
 end
 
 rule "PR7 - Smanjena sigurnosna rezerva reaktivnosti"
@@ -59,7 +64,8 @@ when
 	r: Reactor (rodsPulled > 70, rodsPulled <= 85)
 then
 	String explanation = "U slučaju incidenta nema dovoljno šipki za brzo smanjenje snage.";
-	insert(new Recommendation(RecommendationType.R1, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R1, explanation));
+	update(r);
 end
 
 rule "PR8 - Kritično niska rezerva reaktivnosti"
@@ -67,8 +73,9 @@ when
 	r: Reactor (rodsPulled > 85)
 then
 	String explanation = "Sigurnosna rezerva reaktivnosti je kritično niska i reaktor ne može biti bezbedno kontrolisan pri bilo kakvom poremećaju.";
-	insert(new Recommendation(RecommendationType.R10, explanation));
-	insert(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R10, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	update(r);
 end
 
 rule "PR9 - Zaglavljena kontrolna šipka"
@@ -76,7 +83,8 @@ when
 	r: Reactor (rodsPulled > 70, (rodStatus == RodStatus.SLOW || rodStatus == RodStatus.STUCK))
 then
 	String explanation = "Kod RBMK tipa reaktora vrh kontrolne šipke sadrži grafitni displejser koji pri ubacivanju kratkotrajno povećava reaktivnost pre nego što je smanji.";
-	insert(new Recommendation(RecommendationType.R22, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R22, explanation));
+	update(r);
 end
 
 
@@ -85,7 +93,8 @@ when
 	r: Reactor (pressure > 1.05 * r.getUpperPressureLimit(), pressure <= 1.1 * r.getUpperPressureLimit())
 then
 	String explanation = "Prekomeran pritisak može dovesti do pucanja cevi ili reaktorskog suda.";
-	insert(new Recommendation(RecommendationType.R7, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R7, explanation));
+	update(r);
 end
 
 rule "PR11 - Kritično povišen pritisak u primarnom kolu"
@@ -93,8 +102,9 @@ when
 	r: Reactor (pressure > 1.1 * r.getUpperPressureLimit())
 then
 	String explanation = "Opasnost od rupture je neizbežna.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R7, explanation)); 
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R7, explanation));
+	update(r); 
 end
 
 rule "PR12 - Zaglavljen otvoreni ventil za smanjenje pritiska"
@@ -102,9 +112,10 @@ when
 	r: Reactor (porvStatus == PORVStatus.STUCK_OPEN, pressureDrop > 0)
 then
 	String explanation = "Zaglavljen otvoreni ventil izaziva kontinualni gubitak rashladnog sredstva.";
-	insert(new Recommendation(RecommendationType.R6, explanation));
-	insert(new Recommendation(RecommendationType.R4, explanation));
-	insert(new Recommendation(RecommendationType.R11, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R6, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R4, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R11, explanation));
+	update(r);
 end
 
 rule "PR13 - Ventil za smanjenje pritiska ne reaguje"
@@ -112,8 +123,9 @@ when
 	r: Reactor (pressure > 1.1 * r.getUpperPressureLimit(), porvStatus == PORVStatus.NON_RESPONSIVE)
 then
 	String explanation = "Bez funkcionalnog ventila nema kontrolisanog načina smanjenja pritiska.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R7, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R7, explanation));
+	update(r);
 end
 
 rule "PR14 - Mali gubitak rashladnog sredstva"
@@ -121,7 +133,8 @@ when
 	r: Reactor (pressureDrop > 0, pressureDrop < 1)
 then
 	String explanation = "Spora mikroprokotina može preći u ozbiljno curenje ako se ne lokalizuje.";
-	insert(new Recommendation(RecommendationType.R6, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R6, explanation));
+	update(r);
 end
 
 rule "PR15 - Srednji gubitak rashladnog sredstva"
@@ -129,8 +142,9 @@ when
 	r: Reactor (pressureDrop >= 1, pressureDrop < 5)
 then
 	String explanation = "Srednje ozbiljno curenje zahteva ozbiljniju reakciju da bi se sprečilo dalje pogoršanje stanja.";
-	insert(new Recommendation(RecommendationType.R4, explanation));
-	insert(new Recommendation(RecommendationType.R11, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R4, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R11, explanation));
+	update(r);
 end
 
 rule "PR16 - Veliki gubitak rashladnog sredstva"
@@ -138,9 +152,10 @@ when
 	r: Reactor (pressureDrop >= 5)
 then
 	String explanation = "Katastrofalno curenje rashladnog sredstva je u toku i bez hitne intervencije dolazi do topljenja jezgra.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R14, explanation));
-	insert(new Recommendation(RecommendationType.R16, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R16, explanation));
+	update(r);
 end
 
 rule "PR17 - Povišena temperatura rashladne vode, pumpe ispravne"
@@ -148,8 +163,9 @@ when
 	r: Reactor (temperature >= r.getNominalTemperature() + 5, temperature < r.getNominalTemperature() + 15, pumpStatus == PumpStatus.ALL_FUNCTIONAL)
 then
 	String explanation = "Povišena temperatura uz ispravne pumpe ukazuje na povećanu aktivnost koju treba smanjiti.";
-	insert(new Recommendation(RecommendationType.R1, explanation));
-	insert(new Recommendation(RecommendationType.R3, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R1, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R3, explanation));
+	update(r);
 end
 
 rule "PR18 - Povišena temperatura rashladne vode, jedna pumpa otkazala"
@@ -157,8 +173,9 @@ when
 	r: Reactor (temperature >= r.getNominalTemperature() + 5, temperature < r.getNominalTemperature() + 15, pumpStatus == PumpStatus.ONE_MALFUNCTIONED)
 then
 	String explanation = "Smanjen protok rashladne vode direktno uzrokuje porast temperature i mora se nadomestiti.";
-	insert(new Recommendation(RecommendationType.R3, explanation));
-	insert(new Recommendation(RecommendationType.R5, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R3, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R5, explanation));
+	update(r);
 end
 
 rule "PR19 - Povišena temperatura rashladne vode, više pumpi otkazalo"
@@ -166,8 +183,9 @@ when
 	r: Reactor (temperature >= r.getNominalTemperature() + 5, temperature < r.getNominalTemperature() + 15, pumpStatus == PumpStatus.MULTIPLE_MALFUNCTIONED)
 then
 	String explanation = "Višestruki otkaz pumpi ozbiljno ugrožava hlađenje jezgra.";
-	insert(new Recommendation(RecommendationType.R5, explanation));
-	insert(new Recommendation(RecommendationType.R8, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R5, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R8, explanation));
+	update(r);
 end
 
 rule "PR20 - Povišena temperatura rashladne vode, potpuni gubitak napajanja pumpi"
@@ -175,8 +193,9 @@ when
 	r: Reactor (temperature >= r.getNominalTemperature() + 5, temperature < r.getNominalTemperature() + 15, pumpStatus == PumpStatus.ALL_MALFUNCTIONED)
 then
 	String explanation = "Potpuni gubitak aktivnog hlađenja zahteva hitnu primenu svih raspoloživih alternativa.";
-	insert(new Recommendation(RecommendationType.R8, explanation));
-	insert(new Recommendation(RecommendationType.R9, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R8, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R9, explanation));
+	update(r);
 end
 
 rule "PR21 - Kritično visoka temperatura rashladne vode"
@@ -184,8 +203,9 @@ when
 	r: Reactor (temperature >= r.getNominalTemperature() + 15)
 then
 	String explanation = "Temperatura je dostigla nivo na kome preti oštećenje gorivnih elemenata.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R4, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R4, explanation));
+	update(r);
 end
 
 rule "PR22 - Snižen nivo rashladne vode"
@@ -193,8 +213,9 @@ when
 	r: Reactor (waterLevel == WaterLevel.DECREASED)
 then
 	String explanation = "Snižen nivo vode ukazuje na moguće curenje.";
-	insert(new Recommendation(RecommendationType.R3, explanation));
-	insert(new Recommendation(RecommendationType.R4, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R3, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R4, explanation));
+	update(r);
 end
 
 rule "PR23 - Kritično snižen nivo rashladne vode"
@@ -202,8 +223,9 @@ when
 	r: Reactor (waterLevel == WaterLevel.CRITICALLY_DECREASED)
 then
 	String explanation = "Jezgro delimično otkriveno i topljenje goriva je neminovno.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	update(r);
 end
 
 rule "PR24 - Isključen sigurnosni sistem radi testa"
@@ -211,7 +233,8 @@ when
 	r: Reactor (testInProgress == true && (scramOff == true || eccsOff == true || fluxMonitoringOff == true || pumpsOff == true))
 then
 	String explanation = "Rad reaktora sa deaktiviranim sigurnosnim sistemima doveo do eksplozije u Černobilju.";
-	insert(new Recommendation(RecommendationType.R20, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R20, explanation));
+	update(r);
 end
 
 rule "PR25 - Delimični gubitak spoljnog napajanja"
@@ -219,7 +242,8 @@ when
 	r: Reactor (externalPower == ExternalPower.PARTIALLY_LOST)
 then
 	String explanation = "Gubitak jednog voda napajanja ugrožava pouzdanost rada svih aktivnih sistema hlađenja.";
-	insert(new Recommendation(RecommendationType.R8, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R8, explanation));
+	update(r);
 end
 
 rule "PR26 - Potpuni gubitak spoljnog napajanja"
@@ -227,18 +251,20 @@ when
 	r: Reactor (externalPower == ExternalPower.FULLY_LOST, secondsUntilDiesel < 75)
 then
 	String explanation = "bez napajanja nema aktivnog hlađenja jezgra.";
-	insert(new Recommendation(RecommendationType.R8, explanation));
-	insert(new Recommendation(RecommendationType.R9, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R8, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R9, explanation));
+	update(r);
 end
 
 rule "PR27 - Dizel-generatori nisu preuzeli napajanje"
 when
-	r: Reactor (externalPower == ExternalPower.FULLY_LOST, secondsUntilDiesel >= 75)
+	r: Reactor (recommendations.contains(new Recommendation(RecommendationType.R8)), externalPower == ExternalPower.FULLY_LOST, secondsUntilDiesel >= 75)
 then
 	String explanation = "bez rezervnog napajanja pasivno hlađenje je jedina preostala opcija i ugroženo je i hlađenje bazena.";
-	insert(new Recommendation(RecommendationType.R9, explanation));
-	insert(new Recommendation(RecommendationType.R16, explanation));
-	insert(new Recommendation(RecommendationType.R25, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R9, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R16, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R25, explanation));
+	update(r);
 end
 
 rule "PR28 - Vodonik ispod eksplozivne granice"
@@ -246,7 +272,8 @@ when
 	r: Reactor (hydrogenConcentration > 0, hydrogenConcentration < 4)
 then
 	String explanation = "Vodonik nastaje reakcijom pregrejane cirkonijumske obloge oko goriva sa vodom i njegova koncentracija brzo raste.";
-	insert(new Recommendation(RecommendationType.R18, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R18, explanation));
+	update(r);
 end
 
 rule "PR29 - Vodonik u eksplozivnom opsegu"
@@ -254,8 +281,9 @@ when
 	r: Reactor (hydrogenConcentration >= 4, hydrogenConcentration < 8)
 then
 	String explanation = "Dostignuta je donja granica eksplozivnosti i prisustvo bilo kakvog izvora paljenja može izazvati eksploziju.";
-	insert(new Recommendation(RecommendationType.R17, explanation));
-	insert(new Recommendation(RecommendationType.R18, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R17, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R18, explanation));
+	update(r);
 end
 
 rule "PR30 - Vodonik u detonabilnom opsegu"
@@ -263,9 +291,10 @@ when
 	r: Reactor (hydrogenConcentration >= 8)
 then
 	String explanation = "Mešavina dostigla detonabilnu koncentraciju i postoji opasnost od potpunog razaranja zaštitne zgrade.";
-	insert(new Recommendation(RecommendationType.R17, explanation));
-	insert(new Recommendation(RecommendationType.R18, explanation));
-	insert(new Recommendation(RecommendationType.R21, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R17, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R18, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R21, explanation));
+	update(r);
 end
 
 rule "PR31 - Blago povišena radijacija u kontrolnoj sali"
@@ -273,7 +302,8 @@ when
 	r: Reactor (radiation >= 0.5, radiation < 5)
 then
 	String explanation = "Povišena radijacija u kontrolnoj sali ukazuje na moguće curenje radioaktivnih gasova.";
-	insert(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	update(r);
 end
 
 rule "PR32 - Umereno visoka radijacija u kontrolnoj sali"
@@ -281,7 +311,8 @@ when
 	r: Reactor (radiation >= 5, radiation < 100)
 then
 	String explanation = "Dostignut nivo na kome duža izloženost predstavlja zdravstveni rizik.";
-	insert(new Recommendation(RecommendationType.R15, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R15, explanation));
+	update(r);
 end
 
 rule "PR33 - Kritično visoka radijacija u kontrolnoj sali"
@@ -289,8 +320,9 @@ when
 	r: Reactor (radiation >= 100, radiation < 1000)
 then
 	String explanation = "Dostignut je nivo na kome je svako zadržavanje osoblja opasno po život.";
-	insert(new Recommendation(RecommendationType.R15, explanation));
-	insert(new Recommendation(RecommendationType.R16, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R15, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R16, explanation));
+	update(r);
 end
 
 rule "PR34 - Ekstremno visoka radijacija u kontrolnoj sali"
@@ -298,10 +330,11 @@ when
 	r: Reactor (radiation >= 1000)
 then
 	String explanation = "Nivo radijacije ukazuje na narušenost zaštitne zgrade reaktora i neposrednu opasnost po živote svih prisutnih.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R14, explanation));
-	insert(new Recommendation(RecommendationType.R15, explanation));
-	insert(new Recommendation(RecommendationType.R16, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R15, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R16, explanation));
+	update(r);
 end
 
 rule "PR35 - Curenje radioaktivnih gasova u ventilacionim kanalima"
@@ -309,16 +342,18 @@ when
 	r: Reactor (gasLeaks == true)
 then
 	String explanation = "Curenje radioaktivnih gasova ukazuje na mogući proboj zaštitnih barijera unutar reaktora.";
-	insert(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	update(r);
 end
 
 rule "PR36 - Proboj gorivnih elemenata"
 when
-	r : Reactor(increasedIodineActivity == IncreasedIodineActivity.YES)	
+	r : Reactor(recommendations.contains(new Recommendation(RecommendationType.R14)), increasedIodineActivity == IncreasedIodineActivity.YES)	
 then
 	String explanation = "Proboj cirkonijumskih omotača znači da su fisioni proizvodi direktno u rashladnom kolu i reaktor mora biti trajno ugašen.";
-	insert(new Recommendation(RecommendationType.R2, explanation));
-	insert(new Recommendation(RecommendationType.R13, explanation));
-	insert(new Recommendation(RecommendationType.R14, explanation));
-	insert(new Recommendation(RecommendationType.R23, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R2, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R13, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R14, explanation));
+	r.getRecommendations().add(new Recommendation(RecommendationType.R23, explanation));
+	update(r);
 end
