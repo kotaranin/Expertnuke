@@ -24,6 +24,14 @@ public class Recommendation {
 	public String getExplanation() {
 		return explanation;
 	}
+	
+	public String getName() {
+	    return code.getName();
+	}
+
+	public String getDescription() {
+	    return code.getDescription();
+	}
 
 	@Override
 	public int hashCode() {
